@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>Треки на модерации</h1>
+
+    <div class="moderation-list">
+        {% for file in files %}
+        <div class="moderation-item">
+            <div class="track-info">
+                <h3>{{ file['title'] }}</h3>
+                <p>Автор: {{ file['author'] }} | Год: {{ file['year'] }}</p>
+                <p>Теги: {{ file['tags'] }}</p>
+                <p>Загружен: {{ file['uploaded_at'] }}</p>
+            </div>
+
+            <audio controls>
+                <source src="{{ url_for('uploaded_original', filename=file['filename']) }}" type="audio/mpeg">
+                Ваш браузер не поддерживает аудио элемент.
+            </audio>
+
+            <div class="moderation-actions">
+                <a href="{{ url_for('moderate_file', file_id=file['id']) }}" class="btn btn-primary btn-moderate">
+                    <i class="fas fa-edit"></i> Модерировать
+                </a>
+                <a href="{{ url_for('reject_file', file_id=file['id']) }}" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Отклонить
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-list">
+            <p>Нет треков для модерации</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<style>
+.moderation-list {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.moderation-item {
+    background: rgba(255,255,255,0.05);
+    padding: 1.5rem;
+    border-radius: 8px;
+    display: grid;
+    gap: 1rem;
+}
+
+.track-info {
+    margin-bottom: 1rem;
+}
+
+.moderation-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-moderate {
+    background: #6c5ce7;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-moderate:hover {
+    background: #5649c0;
+}
+
+.empty-list {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255,255,255,0.5);
+}
+</style>
+{% endblock %}
