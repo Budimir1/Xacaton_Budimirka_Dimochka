@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="player-container">
+    <!-- Поисковая панель -->
+    <div class="search-panel">
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Поиск по всем трекам...">
+            <button id="search-button" class="btn btn-search">
+                <i class="fas fa-search"></i> Найти
+            </button>
+        </div>
+<!--        <div class="filters">-->
+<!--            <select id="filter-field">-->
+<!--                <option value="all">Все поля</option>-->
+<!--                <option value="title">Название</option>-->
+<!--                <option value="author">Автор</option>-->
+<!--                <option value="year">Год</option>-->
+<!--                <option value="tags">Теги</option>-->
+<!--            </select>-->
+<!--        </div>-->
+    </div>
+
+    <!-- Шапка таблицы -->
+    <div class="track-header">
+        <div class="header-item cover-header">Обложка</div>
+        <div class="header-item">Название</div>
+        <div class="header-item">Автор</div>
+        <div class="header-item">Год</div>
+        <div class="header-item">Теги</div>
+        {% if current_user.role == 'admin' %}
+        <div class="header-item">Статус</div>
+        {% endif %}
+    </div>
+
+    <!-- Список треков -->
+    <div class="track-list" id="track-list">
+        {% for file in files %}
+        <a href="{{ url_for('file_detail', file_id=file['id']) }}" class="track-item"
+           data-title="{{ file['title'] }}"
+           data-author="{{ file['author'] }}"
+           data-year="{{ file['year'] }}"
+           data-tags="{{ file['tags'] }}">
+            <div class="track-col cover-col">
+                {% if file.cover %}
+                <img src="{{ url_for('static', filename='uploads/covers/' + file.cover) }}"
+                     alt="Обложка" class="track-cover">
+                {% else %}
+                <div class="cover-placeholder">
+                    <i class="fas fa-music"></i>
+                </div>
+                {% endif %}
+            </div>
+            <div class="track-col title-col">{{ file['title'] }}</div>
+            <div class="track-col author-col">{{ file['author'] }}</div>
+            <div class="track-col year-col">{{ file['year'] }}</div>
+            <div class="track-col tags-col">{{ file['tags'] }}</div>
+            {% if current_user.role == 'admin' %}
+            <div class="track-col status-col">
+                <span class="status-{{ file['status'] }}">
+                    {% if file['status'] == 'pending' %}На модерации{% endif %}
+                    {% if file['status'] == 'processing' %}В обработке{% endif %}
+                    {% if file['status'] == 'approved' %}Опубликован{% endif %}
+                </span>
+            </div>
+            {% endif %}
+        </a>
+        {% else %}
+        <div class="empty-list">
+            <p>Пока нет доступных треков</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const filterField = document.getElementById('filter-field');
+    const trackList = document.getElementById('track-list');
+    const trackItems = trackList.querySelectorAll('.track-item');
+
+    function filterTracks() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const field = filterField.value;
+        let hasVisibleItems = false;
+
+        trackItems.forEach(item => {
+            const title = item.dataset.title.toLowerCase();
+            const author = item.dataset.author.toLowerCase();
+            const year = item.dataset.year.toString().toLowerCase();
+            const tags = item.dataset.tags.toLowerCase();
+
+            let match = false;
+
+            if (searchTerm === '') {
+                match = true;
+            } else {
+                switch(field) {
+                    case 'all':
+                        match = title.includes(searchTerm) ||
+                               author.includes(searchTerm) ||
+                               year.includes(searchTerm) ||
+                               tags.includes(searchTerm);
+                        break;
+                    case 'title':
+                        match = title.includes(searchTerm);
+                        break;
+                    case 'author':
+                        match = author.includes(searchTerm);
+                        break;
+                    case 'year':
+                        match = year.includes(searchTerm);
+                        break;
+                    case 'tags':
+                        match = tags.includes(searchTerm);
+                        break;
+                    default:
+                        match = true;
+                }
+            }
+
+            if (match) {
+                item.style.display = 'grid';
+                hasVisibleItems = true;
+
+                // Подсветка совпадений
+                if (searchTerm) {
+                    highlightMatches(item, searchTerm);
+                } else {
+                    removeHighlights(item);
+                }
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Показать сообщение, если ничего не найдено
+        const emptyMessage = document.querySelector('.empty-list');
+        if (!hasVisibleItems) {
+            if (!emptyMessage) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-list';
+                emptyDiv.innerHTML = '<p>Ничего не найдено</p>';
+                trackList.appendChild(emptyDiv);
+            }
+        } else if (emptyMessage) {
+            emptyMessage.remove();
+        }
+    }
+
+    function highlightMatches(item, term) {
+        // Сбрасываем предыдущие подсветки
+        removeHighlights(item);
+
+        // Подсвечиваем совпадения во всех колонках
+        const columns = item.querySelectorAll('.title-col, .author-col, .year-col, .tags-col');
+        columns.forEach(col => {
+            const text = col.textContent;
+            const regex = new RegExp(term, 'gi');
+            const newText = text.replace(regex, match => `<span class="highlight">${match}</span>`);
+            col.innerHTML = newText;
+        });
+    }
+
+    function removeHighlights(item) {
+        const columns = item.querySelectorAll('.title-col, .author-col, .year-col, .tags-col');
+        columns.forEach(col => {
+            if (col.querySelector('.highlight')) {
+                col.innerHTML = col.textContent;
+            }
+        });
+    }
+
+    // Обработчики событий
+    searchInput.addEventListener('input', filterTracks);
+    searchButton.addEventListener('click', filterTracks);
+    filterField.addEventListener('change', filterTracks);
+
+    // Обработчик Enter в поле поиска
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') filterTracks();
+    });
+
+    // Инициализация
+    filterTracks();
+});
+</script>
+
+<style>
+.player-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.search-panel {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1.2rem;
+    background: rgba(108, 92, 231, 0.1);
+    border-radius: 8px;
+}
+
+.search-box {
+    flex: 1;
+    display: flex;
+}
+
+#search-input {
+    flex: 1;
+    padding: 0.8rem 1.2rem;
+    border: none;
+    border-radius: 6px 0 0 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#search-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.5);
+}
+
+.btn-search {
+    background: var(--primary);
+    border-radius: 0 6px 6px 0;
+    padding: 0 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-search:hover {
+    background: var(--primary-dark);
+}
+
+.filters select {
+    padding: 0.8rem;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    font-size: 1rem;
+}
+
+.track-header {
+    display: grid;
+    grid-template-columns: 80px 2fr 1.5fr 100px 1.5fr 150px;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: rgba(108, 92, 231, 0.15);
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+    color: var(--primary-light);
+}
+
+.header-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.cover-header {
+    justify-content: center;
+}
+
+.track-list {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+}
+
+.track-item {
+    display: grid;
+    grid-template-columns: 80px 2fr 1.5fr 100px 1.5fr 150px;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    color: var(--light);
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.track-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.track-col {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0.5rem 0;
+}
+
+.cover-col {
+    justify-content: center;
+}
+
+.track-cover {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.cover-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #6c5ce7, #00b894);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Статусы */
+.status-pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.status-processing {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.status-approved {
+    background: rgba(0, 184, 148, 0.15);
+    color: #00b894;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.empty-list {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+}
+
+/* Подсветка совпадений */
+.highlight {
+    background-color: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 3px;
+}
+
+/* Адаптация под мобильные */
+@media (max-width: 992px) {
+    .search-panel {
+        flex-direction: column;
+    }
+
+    .track-header, .track-item {
+        grid-template-columns: 60px 1fr 1fr;
+        grid-template-areas:
+            "cover title title"
+            ". author author"
+            ". year tags"
+            ". status status";
+    }
+
+    .track-header .header-item:nth-child(4),
+    .track-header .header-item:nth-child(5),
+    .track-header .header-item:nth-child(6) {
+        display: none;
+    }
+
+    .cover-col { grid-area: cover; }
+    .title-col { grid-area: title; }
+    .author-col { grid-area: author; }
+    .year-col { grid-area: year; }
+    .tags-col { grid-area: tags; }
+    .status-col { grid-area: status; }
+
+    .track-col {
+        white-space: normal;
+        padding: 0.3rem 0;
+    }
+}
+</style>
+{% endblock %}
