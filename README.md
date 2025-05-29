@@ -16,7 +16,7 @@
 
 
 (2)Структура проекта:
-Xacaton/
+Xacaton
 app.py                # Основной Flask-сервер
 main_processing.py    # Класс обработки аудио
 templates/            # HTML-шаблоны
