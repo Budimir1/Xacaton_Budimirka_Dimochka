@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="admin-header">
+        <h1><i class="icon-admin"></i> Панель администратора</h1>
+            <div class="admin-stats">
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.published }}</div>
+        <div class="stat-label">Опубликовано</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.moderation }}</div>
+        <div class="stat-label">На модерации</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.users }}</div>
+        <div class="stat-label">Пользователей</div>
+    </div>
+</div>
+</div>
+</div>
+    </div>
+
+    <div class="admin-actions">
+        <div class="action-buttons">
+            <a href="{{ url_for('admin_upload') }}" class="btn btn-add">
+                <i class="icon-add"></i> Добавить трек
+            </a>
+            <a href="{{ url_for('admin_processing') }}" class="btn btn-moderate">
+                <i class="fas fa-edit"></i> Модерация ({{ unprocessed_count }})
+            </a>
+        </div>
+        <div class="search-box">
+            <input type="text" placeholder="Поиск по трекам...">
+            <button class="btn btn-search"><i class="icon-search"></i></button>
+        </div>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Автор</th>
+                    <th>Год</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in audio_files %}
+                <tr>
+                    <td>{{ file.id }}</td>
+                    <td>{{ file.title }}</td>
+                    <td>{{ file.author }}</td>
+                    <td>{{ file.year }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('edit_audio', file_id=file.id) }}" class="btn-action btn-edit">
+                            <i class="icon-edit"></i>
+                        </a>
+                        <a href="{{ url_for('delete_audio', file_id=file.id) }}" class="btn-action btn-delete">
+                            <i class="icon-delete"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<style>
+.btn-moderate {
+    background: #6c5ce7;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-moderate:hover {
+    background: #5649c0;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.admin-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}
+
+<script>
+// Функция обновления статистики
+function updateStats() {
+    fetch('/get_stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('published-count').textContent = data.published;
+            document.getElementById('moderation-count').textContent = data.moderation;
+            document.getElementById('users-count').textContent = data.users;
+        });
+}
+
+// Обновляем при загрузке и каждые 30 секунд
+document.addEventListener('DOMContentLoaded', updateStats);
+setInterval(updateStats, 30000);
+</script>

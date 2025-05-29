@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Музыкальный сервис{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Видео фон -->
+    <div class="video-background">
+        <video autoplay muted loop playsinline id="bg-video" poster="{{ url_for('static', filename='img/fallback.jpg') }}">
+            <source src="{{ url_for('static', filename='video/background.mp4') }}" type="video/mp4">
+            <img src="{{ url_for('static', filename='img/fallback.jpg') }}" alt="Фоновое изображение">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <!-- Навигация -->
+    {% if current_user.is_authenticated %}
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="{{ url_for('player') }}" class="nav-brand">Голос Победы</a>
+            <div class="nav-links">
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}">Админ-панель</a>
+                    {% if unprocessed_count > 0 %}
+                        <a href="{{ url_for('admin_processing') }}" class="moderation-alert">
+                            <i class="fas fa-edit"></i> Модерация ({{ unprocessed_count }})
+                        </a>
+                    {% endif %}
+                {% endif %}
+                <a href="{{ url_for('logout') }}">Выйти</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Основное содержимое -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Скрипты -->
+    <script>
+        // Проверка поддержки видео и автовоспроизведения
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('bg-video');
+            const playPromise = video.play();
+
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    video.poster = "{{ url_for('static', filename='img/fallback.jpg') }}";
+                    video.load();
+                });
+            }
+
+            // Адаптация для мобильных устройств
+            if (window.innerWidth <= 768) {
+                const videoContainer = document.querySelector('.video-background');
+                if (videoContainer) {
+                    videoContainer.innerHTML = '<div class="mobile-background"></div>';
+                }
+            }
+
+            // Обновление счетчиков для админа
+            {% if current_user.role == 'admin' %}
+            function updateAdminStats() {
+                fetch('/admin/stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        const modAlert = document.querySelector('.moderation-alert');
+                        if (modAlert) {
+                            modAlert.innerHTML = `<i class="fas fa-edit"></i> Модерация (${data.moderation})`;
+                        }
+                    });
+            }
+            setInterval(updateAdminStats, 30000);
+            {% endif %}
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

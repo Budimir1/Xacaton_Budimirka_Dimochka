@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ file.title }}</h1>
+    <p>Автор: {{ file.author }} | Год: {{ file.year }}</p>
+    <p>Теги: {{ file.tags }}</p>
+
+    <div class="audio-versions">
+        <div class="audio-version">
+            <h3>Оригинальное аудио:</h3>
+            <audio controls>
+                <source src="{{ url_for('static', filename='uploads/' + file.filename_original) }}" type="audio/mpeg">
+                Ваш браузер не поддерживает аудио элемент.
+            </audio>
+        </div>
+
+        <div class="audio-version">
+            <h3>Обработанное аудио:</h3>
+            {% if file.filename_processed %}
+            <audio controls>
+                <source src="{{ url_for('static', filename='uploads/' + file.filename_processed) }}" type="audio/mpeg">
+                Ваш браузер не поддерживает аудио элемент.
+            </audio>
+            <div class="processed-text">
+                <h4>Текст:</h4>
+                <p>{{ file.text }}</p>
+            </div>
+            {% else %}
+            <p class="processing-message">Аудио еще обрабатывается...</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{{ url_for('player') }}" class="btn btn-secondary">← Назад к списку</a>
+</div>
+{% endblock %}
