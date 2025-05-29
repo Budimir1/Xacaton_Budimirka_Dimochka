@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-edit-container">
+    <h1>Редактирование трека</h1>
+
+    <form method="POST">
+        <div class="form-group">
+            <label>Название:</label>
+            <input type="text" name="title" value="{{ file['title'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Автор:</label>
+            <input type="text" name="author" value="{{ file['author'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Год:</label>
+            <input type="text" name="year" value="{{ file['year'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Теги:</label>
+            <input type="text" name="tags" value="{{ file['tags'] }}">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-save">Сохранить</button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-cancel">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.admin-edit-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    color: white;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-save {
+    background: #00b894;
+    color: white;
+}
+
+.btn-cancel {
+    background: #636e72;
+    color: white;
+}
+</style>
+{% endblock %}

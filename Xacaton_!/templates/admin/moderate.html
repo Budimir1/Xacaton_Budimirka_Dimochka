@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="moderation-container">
+    <h1>Модерация трека</h1>
+
+    <div class="audio-preview">
+        <h2>{{ file['title'] }}</h2>
+        <audio controls>
+            <source src="{{ url_for('static', filename='uploads/' + file['filename']) }}" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <form method="POST" class="moderation-form">
+        <div class="form-group">
+            <label>Название трека:</label>
+            <input type="text" name="title" value="{{ file['title'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Исполнитель:</label>
+            <input type="text" name="author" value="{{ file['author'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Год выпуска:</label>
+            <input type="text" name="year" value="{{ file['year'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Теги (через запятую):</label>
+            <input type="text" name="tags" value="{{ file['tags'] }}">
+        </div>
+
+        <div class="form-group">
+            <label>Текст песни:</label>
+            <textarea name="text" rows="10">{{ file.get('text', '') }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-check"></i> Опубликовать
+            </button>
+            <button type="button" class="btn btn-process" onclick="processTrack({{ file['id'] }})">
+                <i class="fas fa-cog"></i> Обработать
+            </button>
+            <a href="{{ url_for('reject_file', file_id=file['id']) }}" class="btn btn-danger">
+                <i class="fas fa-times"></i> Отклонить
+            </a>
+            <a href="{{ url_for('admin_processing') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Назад
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+.moderation-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.audio-preview {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.moderation-form {
+    background: rgba(255,255,255,0.05);
+    padding: 2rem;
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.8rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    color: white;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-process {
+    background: #3498db;
+    color: white;
+}
+
+</style>
+<script>
+function processTrack(fileId) {
+    if (!confirm('Отправить трек на обработку?')) return;
+
+    fetch(`/admin/process/${fileId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.error) });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        alert('Ошибка: ' + error.message);
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}
