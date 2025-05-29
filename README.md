@@ -16,16 +16,16 @@
 
 
 (2)Структура проекта:
-VibeCode/
-├── app.py                # Основной Flask-сервер
-├── main_processing.py    # Класс обработки аудио
-├── templates/            # HTML-шаблоны
-├── static/               # CSS, JS, изображения, загруженные файлы
-├── data/                 # JSON-файлы с метаданными
-├── processed_audio/      # Генерируемые аудиофайлы
-├── config.py             # Настройки
-├── Test/                 # Тестовые скрипты
-└── .venv/                # Виртуальное окружение
+Xacaton/
+app.py                # Основной Flask-сервер
+main_processing.py    # Класс обработки аудио
+templates/            # HTML-шаблоны
+static/               # CSS, JS, изображения, загруженные файлы
+data/                 # JSON-файлы с метаданными
+processed_audio/      # Генерируемые аудиофайлы
+config.py             # Настройки
+Test/                 # Тестовые скрипты
+.venv/                # Виртуальное окружение
 
 
 
