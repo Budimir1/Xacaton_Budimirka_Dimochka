@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="track-header">
+    <img src="{{ url_for('static', filename='img/cover-placeholder.png') }}"
+         alt="Обложка" class="track-cover-large">
+    <div class="track-info">
+        <h1>{{ file.title }}</h1>
+        <div class="track-meta">
+            <span><strong>Автор:</strong> {{ file.author }}</span>
+            <span><strong>Год:</strong> {{ file.year }}</span>
+            <span><strong>Теги:</strong> {{ file.tags }}</span>
+        </div>
+    </div>
+</div>
+<div class="file-detail-container">
+    <div class="file-header">
+        <h1>{{ file.title }}</h1>
+        <div class="file-meta">
+            <span class="author"><i class="fas fa-user"></i> {{ file.author }}</span>
+            <span class="year"><i class="far fa-calendar"></i> {{ file.year }}</span>
+            <span class="tags"><i class="fas fa-tags"></i> {{ file.tags }}</span>
+        </div>
+    </div>
+
+    <div class="audio-versions">
+        <div class="version-card original-version">
+            <h2><i class="fas fa-music"></i> Оригинальная версия</h2>
+            <div class="audio-player">
+                <audio controls>
+                    <source src="{{ url_for('static', filename='uploads/original/' + file.filename) }}" type="audio/mpeg">
+                    Ваш браузер не поддерживает аудио элемент.
+                </audio>
+                <div class="audio-info">
+                    <span class="format">Формат: MP3</span>
+                    <span class="size">{{ (file.size/1024/1024)|round(2) }} MB</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="version-card enhanced-version">
+            <h2><i class="fas fa-magic"></i> Улучшенная версия</h2>
+            {% if file.processed_filename %}
+            <div class="audio-player">
+                <audio controls>
+                    <source src="{{ url_for('static', filename='uploads/processed/' + file.processed_filename) }}" type="audio/mpeg">
+                    Ваш браузер не поддерживает аудио элемент.
+                </audio>
+                <div class="audio-info">
+                    <span class="quality">Качество: 320 kbps</span>
+                    <span class="processed-date">Обработано: {{ file.processed_date }}</span>
+                </div>
+            </div>
+
+            <div class="lyrics-section">
+                <h3><i class="fas fa-align-left"></i> Текст песни</h3>
+                <div class="lyrics-content">
+                    {{ file.text|default("Текст песни пока не добавлен", true) }}
+                </div>
+            </div>
+            {% else %}
+            <div class="processing-message">
+                <div class="processing-icon">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="processing-text">
+                    <h3>Идет обработка аудио</h3>
+                    <p>Улучшенная версия и текст песни будут доступны после завершения обработки</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="file-actions">
+        <a href="{{ url_for('player') }}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+
+        {% if current_user.role == 'admin' %}
+        <div class="admin-actions">
+            <a href="{{ url_for('edit_audio', file_id=file.id) }}" class="btn btn-edit">
+                <i class="fas fa-edit"></i> Редактировать
+            </a>
+            <a href="{{ url_for('delete_audio', file_id=file.id) }}" class="btn btn-delete">
+                <i class="fas fa-trash"></i> Удалить
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.file-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.file-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.file-header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-light);
+}
+
+.file-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    color: var(--medium-gray);
+    margin-bottom: 1.5rem;
+}
+
+.file-meta i {
+    margin-right: 0.5rem;
+}
+
+.audio-versions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.version-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.version-card h2 {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.original-version {
+    border-left: 4px solid var(--primary);
+}
+
+.enhanced-version {
+    border-left: 4px solid var(--secondary);
+}
+
+.audio-player {
+    margin-bottom: 1.5rem;
+}
+
+.audio-player audio {
+    width: 100%;
+    border-radius: var(--border-radius-sm);
+}
+
+.audio-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--medium-gray);
+    margin-top: 0.5rem;
+}
+
+.lyrics-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lyrics-section h3 {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.lyrics-content {
+    white-space: pre-line;
+    line-height: 1.6;
+    padding: 1rem;
+    background: rgba(0, 184, 148, 0.05);
+    border-radius: var(--border-radius-sm);
+}
+
+.processing-message {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    background: rgba(255, 193, 7, 0.05);
+    border-radius: var(--border-radius-sm);
+}
+
+.processing-icon {
+    font-size: 2rem;
+    color: var(--warning);
+}
+
+.processing-text h3 {
+    margin-bottom: 0.5rem;
+    color: var(--warning);
+}
+
+.file-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-back {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-edit {
+    background: rgba(0, 184, 148, 0.1);
+    color: var(--secondary);
+}
+
+.btn-delete {
+    background: rgba(214, 48, 49, 0.1);
+    color: var(--danger);
+}
+
+@media (max-width: 768px) {
+    .audio-versions {
+        grid-template-columns: 1fr;
+    }
+
+    .file-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .processing-message {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+.track-header {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.track-cover-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: var(--shadow);
+}
+
+.track-info {
+    flex: 1;
+}
+
+.track-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    color: var(--medium-gray);
+}
+
+</style>
+{% endblock %}

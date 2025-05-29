@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <h1><i class="fas fa-cog"></i> Панель администратора</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="admin-stats">
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.published }}</div>
+            <div class="stat-label">Опубликовано</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.moderation }}</div>
+            <div class="stat-label">На модерации</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.users }}</div>
+            <div class="stat-label">Пользователей</div>
+        </div>
+    </div>
+
+    <div class="admin-actions">
+        <a href="{{ url_for('admin_upload') }}" class="btn btn-primary">
+            <i class="fas fa-upload"></i> Загрузить трек
+        </a>
+        <a href="{{ url_for('admin_processing') }}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Модерация ({{ unprocessed_count }})
+        </a>
+    </div>
+
+    <div class="admin-table">
+        <h2>Все треки</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Автор</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in audio_files %}
+                <tr>
+                    <td>{{ file.id }}</td>
+                    <td>{{ file.title }}</td>
+                    <td>{{ file.author }}</td>
+                    <td>
+                        <span class="status-{{ file.status }}">
+                            {{ file.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('edit_audio', file_id=file.id) }}" class="btn btn-sm btn-info">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{{ url_for('delete_audio', file_id=file.id) }}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.admin-dashboard {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-stats {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.admin-table {
+    background: rgba(255,255,255,0.05);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.status-pending {
+    color: #ffc107;
+}
+.status-approved {
+    color: #28a745;
+}
+.status-processing {
+    color: #17a2b8;
+}
+</style>
+{% endblock %}
