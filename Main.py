@@ -410,7 +410,7 @@ class HistoricalAudioProcessor:
         py_profile = {}
         for key, value in profile.items():
             if isinstance(value, np.generic):
-                py_profile[key] = value.item()  # Преобразование numpy-типа в Python-тип
+                py_profile[key] = value.item()
             else:
                 py_profile[key] = value
 
@@ -573,7 +573,7 @@ class HistoricalAudioProcessor:
         """Анализ улучшения качества дорожки"""
         # Расчет SNR
         proc_snr = calculate_snr(processed, original)
-        improvement = proc_snr  # Больше не вычитаем бесконечность
+        improvement = proc_snr 
 
         # Спектральный анализ
         orig_spec = np.abs(librosa.stft(original))
@@ -671,8 +671,7 @@ class HistoricalAudioProcessor:
         # Проверка на NaN/Inf
         final = np.nan_to_num(final, nan=0.0, posinf=0.0, neginf=0.0)
 
-        # Убрана проверка частотных диапазонов - слишком агрессивная
-        # Вместо этого - общее улучшение
+
 
         # Компенсация высоких частот для вокала
         if profile["доминирование_вокала"]:
@@ -707,7 +706,7 @@ class HistoricalAudioProcessor:
             def separate_with_demucs():
                 audio_tensor = torch.from_numpy(audio).float()
 
-                # Если аудио уже многоканальное (2 канала), используем как есть
+                # Если аудио уже многоканальное, используем как есть
                 if audio_tensor.dim() == 2 and audio_tensor.shape[0] == 2:
                     pass
                 elif audio_tensor.dim() == 1:
@@ -733,7 +732,7 @@ class HistoricalAudioProcessor:
                 instrumental_mono = instrumental.mean(axis=0, keepdims=True)  # [1, N]
 
                 # === Усиление инструментальной дорожки ===
-                instrumental_mono *= 1.5  # усилить на 50%
+                instrumental_mono *= 1.5 
 
                 # === Очистка вокала от низов (убираем басы ниже 150 Гц) ===
                 vocal_mono_filtered = highpass_filter(vocal_mono[0], sr, cutoff=150)
